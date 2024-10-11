@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ethers } from "ethers";
 
 const data = [
   {
@@ -23,13 +24,46 @@ const data = [
 
 export default function Final() {
   const [sdata, setData] = useState(data);
+  const [connect, setConnect] = useState(false);
+  const [account, setAccount] = useState("0xb4Cd6D38d92D6CC1b1B50c735bDa1242B6c9D867");
+  const [voting , setVoting ] = useState()
+
+  const connectWallet = async () => {
+    try {
+      if (!window.ethereum) {
+        return alert("Please install a crypto wallet, like MetaMask.");
+      }
+
+      // Create an instance of ethers with the browser provider (MetaMask)
+      const provider = new ethers.BrowserProvider(window.ethereum);
+
+      // Request access to the user's wallet
+      await provider.send("eth_requestAccounts", []);
+
+      // Get the signer (current account)
+      const signer = await provider.getSigner();
+
+      // Get the connected account address
+      const address = await signer.getAddress();
+
+      // Update the state with account and connection status
+      setAccount(address);
+      setConnect(true);
+    } catch (error) {
+      console.error("Failed to connect wallet:", error);
+    }
+  };
 
   return (
     <section className="py-6 px-4">
       {/* Connect Wallet Button */}
       <div className="w-full flex justify-end">
-        <button className="flex items-center text-lg justify-evenly w-full md:w-2/12 h-12 md:h-14 border-2 border-white shadow-md rounded-xl text-black font-semibold capitalize transition duration-300">
-          <img src="/images/metamask.png" alt="Metamask logo" /> connect wallet
+        <button
+          onClick={connectWallet}
+          className="flex items-center text-lg justify-evenly w-full md:w-2/12 h-12 md:h-14 border-2 border-white shadow-md rounded-xl text-black font-semibold capitalize transition duration-300"
+        >
+          <img src="/images/metamask.png" alt="Metamask logo" />{" "}
+          {connect ? `Connected` : "Connect Wallet"}
         </button>
       </div>
 
@@ -43,9 +77,11 @@ export default function Final() {
       {/* MetaMask Address */}
       <div className="flex flex-col gap-4 items-center mt-6 justify-center w-full h-full">
         <p className="capitalize text-sm md:text-lg text-center">
-          metamask: <span>0xb5Cd7D89d92D6CC1b1B50c735bDa1242B6c9D834</span>
+          metamask: <span>{account}</span>
         </p>
-        <p className="text-sm md:text-lg">Vote for any of the listed candidates</p>
+        <p className="text-sm md:text-lg">
+          Vote for any of the listed candidates
+        </p>
       </div>
 
       {/* List of Candidates */}
@@ -64,7 +100,9 @@ export default function Final() {
               <div className="mt-4 text-center">
                 <h2 className="text-lg md:text-xl font-bold">{user.name}</h2>
                 <p className="text-teal-500 font-semibold">{user.party}</p>
-                <p className="text-gray-700 mt-2 text-sm md:text-base">{user.info}</p>
+                <p className="text-gray-700 mt-2 text-sm md:text-base">
+                  {user.info}
+                </p>
               </div>
               <div className="flex justify-center mt-4">
                 <button
