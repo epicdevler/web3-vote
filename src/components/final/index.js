@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ethers } from "ethers";
-
-
+import { contractAddress } from "../../contract/contractAddress";
+import contractABI from "../../contract/abi.json";
 const data = [
   {
     name: "Chinwe Okonkwo",
@@ -30,6 +30,18 @@ export default function Final() {
     "0xb4Cd6D38d92D6CC1b1B50c735bDa1242B6c9D867"
   );
   const [voting, setVoting] = useState();
+
+  let contractVote;
+
+  const connectContract = async () => {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    contractVote = new ethers.Contract(
+      contractAddress,
+      contractABI.abi,
+      signer
+    );
+  };
 
   const connectWallet = async () => {
     try {
@@ -109,7 +121,7 @@ export default function Final() {
               </div>
               <div className="flex justify-center mt-4">
                 <button
-                  onClick={(e) => setVoting(e.target.value)}
+                  onClick={()=> connectContract()}
                   className="w-full md:w-1/2 border-2 border-black h-10 md:h-12 shadow-md rounded-xl text-black font-semibold capitalize transition duration-300"
                   aria-label="Vote for the candidate"
                 >
