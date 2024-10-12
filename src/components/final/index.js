@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { ethers } from "ethers";
 import { contractAddress } from "../../contract/contractAddress";
-import contractABI from "../../contract/abi.json";
+import walletABI from "../../contract/abi.json";
+
 const data = [
   {
     name: "Chinwe Okonkwo",
@@ -26,46 +27,50 @@ const data = [
 export default function Final() {
   const [sdata, setData] = useState(data);
   const [connect, setConnect] = useState(false);
-  const [account, setAccount] = useState(
-    "0xb4Cd6D38d92D6CC1b1B50c735bDa1242B6c9D867"
-  );
-  const [voting, setVoting] = useState();
+  const [account, setAccount] = useState("");
+  const [contractVote, setContractVote] = useState(null);
 
-  let contractVote;
-
+  // Connect to the contract
   const connectContract = async () => {
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
-    contractVote = new ethers.Contract(
-      contractAddress,
-      contractABI.abi,
-      signer
-    );
+    const contract = new ethers.Contract(contractAddress, walletABI.abi, signer);
+    setContractVote(contract);
   };
 
+  // Connect to the MetaMask wallet
   const connectWallet = async () => {
     try {
       if (!window.ethereum) {
         return alert("Please install a crypto wallet, like MetaMask.");
       }
 
-      // Create an instance of ethers with the browser provider (MetaMask)
       const provider = new ethers.BrowserProvider(window.ethereum);
-
-      // Request access to the user's wallet
       await provider.send("eth_requestAccounts", []);
-
-      // Get the signer (current account)
       const signer = await provider.getSigner();
-
-      // Get the connected account address
       const address = await signer.getAddress();
-
-      // Update the state with account and connection status
+      
       setAccount(address);
       setConnect(true);
+      await connectContract(); // Initialize contract after connecting wallet
     } catch (error) {
       console.error("Failed to connect wallet:", error);
+    }
+  };
+
+  // Function to handle voting for a candidate
+  const voteForCandidate = async (index) => {
+    if (!contractVote) {
+      return alert("Please connect to the wallet first!");
+    }
+
+    try {
+      const voteTx = await contractVote.vote(index); // Assuming 'vote' is the function in the smart contract
+      await voteTx.wait();
+      alert(`Voted for candidate ${sdata[index].name} successfully!`);
+    } catch (error) {
+      console.error("Error voting:", error);
+      alert("Failed to vote.");
     }
   };
 
@@ -121,7 +126,7 @@ export default function Final() {
               </div>
               <div className="flex justify-center mt-4">
                 <button
-                  onClick={()=> connectContract()}
+                  onClick={() => voteForCandidate(index)} // Pass the candidate index to the voting function
                   className="w-full md:w-1/2 border-2 border-black h-10 md:h-12 shadow-md rounded-xl text-black font-semibold capitalize transition duration-300"
                   aria-label="Vote for the candidate"
                 >
